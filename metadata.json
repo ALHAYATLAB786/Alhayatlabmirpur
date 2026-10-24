@@ -1,0 +1,6 @@
+{
+  "name": "Al-Hayat Lab Mirpur — Diagnostic Portal & Lab App",
+  "description": "Official bilingual (English/Urdu) diagnostic laboratory portal, online test & home sample booking, verifiable PDF invoices & reports with QR codes, and secure admin management app for Al-Hayat Lab & Skin Care Center, Opp. DHQ Hospital Mirpur.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

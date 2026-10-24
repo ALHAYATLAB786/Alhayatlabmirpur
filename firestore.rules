@@ -1,0 +1,384 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net — Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // GLOBAL HARDENED PRIMITIVES
+    // =========================================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'toseefgulistan6@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin()
+        || (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function isNotTerminalBooking(data) {
+      return !(data.status in ['Completed', 'Cancelled']);
+    }
+
+    // =========================================================================
+    // ENTITY VALIDATION BLUEPRINTS (Strict Keys, Types, Bounds, Identity)
+    // =========================================================================
+
+    function isValidAdminRole(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'addedBy', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'addedBy', 'createdAt'])
+        && data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.addedBy is string && data.addedBy.size() >= 1 && data.addedBy.size() <= 128 && data.addedBy == request.auth.uid
+        && data.createdAt is timestamp;
+    }
+
+    function isValidLabSettings(data) {
+      return data.keys().hasAll([
+          'labName', 'labNameUr', 'subtitle', 'subtitleUr',
+          'tagline', 'taglineUr', 'managingDirector', 'managingDirectorUr',
+          'primaryPhone', 'secondaryPhone', 'whatsappNumber',
+          'address', 'addressUr', 'timings', 'timingsUr',
+          'specialNoticeEn', 'specialNoticeUr',
+          'homeCollectionFee', 'freeHomeCollectionThreshold',
+          'publicWebsiteUrl', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'labName', 'labNameUr', 'subtitle', 'subtitleUr',
+          'tagline', 'taglineUr', 'managingDirector', 'managingDirectorUr',
+          'primaryPhone', 'secondaryPhone', 'whatsappNumber',
+          'address', 'addressUr', 'timings', 'timingsUr',
+          'specialNoticeEn', 'specialNoticeUr',
+          'homeCollectionFee', 'freeHomeCollectionThreshold',
+          'publicWebsiteUrl', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.labName is string && data.labName.size() >= 1 && data.labName.size() <= 120
+        && data.labNameUr is string && data.labNameUr.size() >= 1 && data.labNameUr.size() <= 120
+        && data.subtitle is string && data.subtitle.size() >= 1 && data.subtitle.size() <= 160
+        && data.subtitleUr is string && data.subtitleUr.size() >= 1 && data.subtitleUr.size() <= 160
+        && data.tagline is string && data.tagline.size() >= 1 && data.tagline.size() <= 200
+        && data.taglineUr is string && data.taglineUr.size() >= 1 && data.taglineUr.size() <= 200
+        && data.managingDirector is string && data.managingDirector.size() >= 1 && data.managingDirector.size() <= 120
+        && data.managingDirectorUr is string && data.managingDirectorUr.size() >= 1 && data.managingDirectorUr.size() <= 120
+        && data.primaryPhone is string && data.primaryPhone.size() >= 5 && data.primaryPhone.size() <= 40
+        && data.secondaryPhone is string && data.secondaryPhone.size() >= 5 && data.secondaryPhone.size() <= 40
+        && data.whatsappNumber is string && data.whatsappNumber.size() >= 7 && data.whatsappNumber.size() <= 30
+        && data.address is string && data.address.size() >= 3 && data.address.size() <= 250
+        && data.addressUr is string && data.addressUr.size() >= 3 && data.addressUr.size() <= 250
+        && data.timings is string && data.timings.size() >= 3 && data.timings.size() <= 120
+        && data.timingsUr is string && data.timingsUr.size() >= 3 && data.timingsUr.size() <= 120
+        && data.specialNoticeEn is string && data.specialNoticeEn.size() >= 1 && data.specialNoticeEn.size() <= 400
+        && data.specialNoticeUr is string && data.specialNoticeUr.size() >= 1 && data.specialNoticeUr.size() <= 400
+        && data.homeCollectionFee is number && data.homeCollectionFee >= 0 && data.homeCollectionFee <= 50000
+        && data.freeHomeCollectionThreshold is number && data.freeHomeCollectionThreshold >= 0 && data.freeHomeCollectionThreshold <= 500000
+        && data.publicWebsiteUrl is string && data.publicWebsiteUrl.size() <= 300
+        && data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCatalogState(data) {
+      return data.keys().hasAll([
+          'priceOverrides', 'flagOverrides', 'customTests',
+          'deletedTestIds', 'packagesMap', 'reviewsMap',
+          'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'priceOverrides', 'flagOverrides', 'customTests',
+          'deletedTestIds', 'packagesMap', 'reviewsMap',
+          'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.priceOverrides is map && data.priceOverrides.size() <= 1000
+        && data.flagOverrides is map && data.flagOverrides.size() <= 1000
+        && data.customTests is map && data.customTests.size() <= 300
+        && data.deletedTestIds is map && data.deletedTestIds.size() <= 500
+        && data.packagesMap is map && data.packagesMap.size() <= 50
+        && data.reviewsMap is map && data.reviewsMap.size() <= 100
+        && data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBookingPrivate(data) {
+      return data.keys().hasAll([
+          'bookingId', 'verificationPin', 'patientName', 'patientPhone',
+          'patientAge', 'patientGender', 'collectionType', 'address',
+          'preferredDate', 'preferredTime', 'doctorRef', 'notes',
+          'itemsMap', 'subtotal', 'homeCollectionFee', 'discount',
+          'totalAmount', 'paymentStatus', 'status', 'reportPublished',
+          'adminEmail', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'bookingId', 'verificationPin', 'patientName', 'patientPhone',
+          'patientAge', 'patientGender', 'collectionType', 'address',
+          'preferredDate', 'preferredTime', 'doctorRef', 'notes',
+          'itemsMap', 'subtotal', 'homeCollectionFee', 'discount',
+          'totalAmount', 'paymentStatus', 'status', 'reportPublished',
+          'adminEmail', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.bookingId is string && data.bookingId.size() >= 3 && data.bookingId.size() <= 64 && data.bookingId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.verificationPin is string && data.verificationPin.size() >= 4 && data.verificationPin.size() <= 16
+        && data.patientName is string && data.patientName.size() >= 1 && data.patientName.size() <= 120
+        && data.patientPhone is string && data.patientPhone.size() >= 5 && data.patientPhone.size() <= 40
+        && data.patientAge is string && data.patientAge.size() >= 1 && data.patientAge.size() <= 24
+        && data.patientGender is string && data.patientGender.size() <= 16 && (data.patientGender in ['Male', 'Female', 'Other'])
+        && data.collectionType is string && data.collectionType.size() <= 32 && (data.collectionType in ['lab_visit', 'home_collection'])
+        && data.address is string && data.address.size() >= 1 && data.address.size() <= 300
+        && data.preferredDate is string && data.preferredDate.size() >= 4 && data.preferredDate.size() <= 32
+        && data.preferredTime is string && data.preferredTime.size() >= 2 && data.preferredTime.size() <= 32
+        && data.doctorRef is string && data.doctorRef.size() >= 1 && data.doctorRef.size() <= 120
+        && data.notes is string && data.notes.size() <= 500
+        && data.itemsMap is map && data.itemsMap.size() <= 50
+        && data.subtotal is number && data.subtotal >= 0 && data.subtotal <= 5000000
+        && data.homeCollectionFee is number && data.homeCollectionFee >= 0 && data.homeCollectionFee <= 50000
+        && data.discount is number && data.discount >= 0 && data.discount <= 5000000
+        && data.totalAmount is number && data.totalAmount >= 0 && data.totalAmount <= 5000000
+        && data.paymentStatus is string && data.paymentStatus.size() <= 20 && (data.paymentStatus in ['Unpaid', 'Paid', 'Partial'])
+        && data.status is string && data.status.size() <= 32 && (data.status in ['Pending', 'Confirmed', 'Sample Collected', 'Processing', 'Report Ready', 'Completed', 'Cancelled'])
+        && data.reportPublished is bool
+        && data.adminEmail is string && data.adminEmail.size() >= 5 && data.adminEmail.size() <= 160 && data.adminEmail == 'toseefgulistan6@gmail.com'
+        && data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBookingReport(data) {
+      return data.keys().hasAll([
+          'bookingId', 'verificationPin', 'patientName', 'patientAge',
+          'patientGender', 'collectionType', 'preferredDate', 'preferredTime',
+          'doctorRef', 'itemsMap', 'subtotal', 'homeCollectionFee',
+          'discount', 'totalAmount', 'paymentStatus', 'status',
+          'reportPublished', 'reportPublishedAt', 'reportResultsMap',
+          'reportRemarks', 'verifiedBy', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'bookingId', 'verificationPin', 'patientName', 'patientAge',
+          'patientGender', 'collectionType', 'preferredDate', 'preferredTime',
+          'doctorRef', 'itemsMap', 'subtotal', 'homeCollectionFee',
+          'discount', 'totalAmount', 'paymentStatus', 'status',
+          'reportPublished', 'reportPublishedAt', 'reportResultsMap',
+          'reportRemarks', 'verifiedBy', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.bookingId is string && data.bookingId.size() >= 3 && data.bookingId.size() <= 64 && data.bookingId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.verificationPin is string && data.verificationPin.size() >= 4 && data.verificationPin.size() <= 16
+        && data.patientName is string && data.patientName.size() >= 1 && data.patientName.size() <= 120
+        && data.patientAge is string && data.patientAge.size() >= 1 && data.patientAge.size() <= 24
+        && data.patientGender is string && data.patientGender.size() <= 16 && (data.patientGender in ['Male', 'Female', 'Other'])
+        && data.collectionType is string && data.collectionType.size() <= 32 && (data.collectionType in ['lab_visit', 'home_collection'])
+        && data.preferredDate is string && data.preferredDate.size() >= 4 && data.preferredDate.size() <= 32
+        && data.preferredTime is string && data.preferredTime.size() >= 2 && data.preferredTime.size() <= 32
+        && data.doctorRef is string && data.doctorRef.size() >= 1 && data.doctorRef.size() <= 120
+        && data.itemsMap is map && data.itemsMap.size() <= 50
+        && data.subtotal is number && data.subtotal >= 0 && data.subtotal <= 5000000
+        && data.homeCollectionFee is number && data.homeCollectionFee >= 0 && data.homeCollectionFee <= 50000
+        && data.discount is number && data.discount >= 0 && data.discount <= 5000000
+        && data.totalAmount is number && data.totalAmount >= 0 && data.totalAmount <= 5000000
+        && data.paymentStatus is string && data.paymentStatus.size() <= 20 && (data.paymentStatus in ['Unpaid', 'Paid', 'Partial'])
+        && data.status is string && data.status.size() <= 32 && (data.status in ['Pending', 'Confirmed', 'Sample Collected', 'Processing', 'Report Ready', 'Completed', 'Cancelled'])
+        && data.reportPublished is bool
+        && data.reportPublishedAt is string && data.reportPublishedAt.size() <= 40
+        && data.reportResultsMap is map && data.reportResultsMap.size() <= 100
+        && data.reportRemarks is string && data.reportRemarks.size() <= 600
+        && data.verifiedBy is string && data.verifiedBy.size() <= 160
+        && data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // =========================================================================
+    // COLLECTION 1: /admins/{adminUid}
+    // =========================================================================
+    match /admins/{adminUid} {
+      allow get: if isVerifiedUser() && isValidId(adminUid) && (request.auth.uid == adminUid || isBootstrappedAdmin());
+      allow list: if false;
+      allow create: if isBootstrappedAdmin()
+        && isValidId(adminUid)
+        && isValidAdminRole(incoming())
+        && incoming().uid == adminUid
+        && incoming().createdAt == request.time;
+      allow update: if isBootstrappedAdmin()
+        && isValidId(adminUid)
+        && isValidAdminRole(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email']);
+      allow delete: if isBootstrappedAdmin() && isValidId(adminUid);
+    }
+
+    // =========================================================================
+    // COLLECTION 2: /settings/{settingId} (Singleton 'live', Non-PII Public Read)
+    // =========================================================================
+    match /settings/{settingId} {
+      allow get: if settingId == 'live';
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && settingId == 'live'
+        && isValidLabSettings(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidLabSettings(incoming())
+        && settingId == 'live'
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'labName', 'labNameUr', 'subtitle', 'subtitleUr',
+            'tagline', 'taglineUr', 'managingDirector', 'managingDirectorUr',
+            'primaryPhone', 'secondaryPhone', 'whatsappNumber',
+            'address', 'addressUr', 'timings', 'timingsUr',
+            'specialNoticeEn', 'specialNoticeUr',
+            'homeCollectionFee', 'freeHomeCollectionThreshold',
+            'publicWebsiteUrl', 'updatedBy', 'updatedAt'
+          ])
+        )
+        && isAdmin();
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 3: /catalog_state/{stateId} (Singleton 'live', Non-PII Live Prices)
+    // =========================================================================
+    match /catalog_state/{stateId} {
+      allow get: if stateId == 'live';
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && stateId == 'live'
+        && isValidCatalogState(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidCatalogState(incoming())
+        && stateId == 'live'
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Price or Visibility Override Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['priceOverrides', 'flagOverrides', 'updatedBy', 'updatedAt'])
+          ||
+          // Action 2: Custom Test or Deletion Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['customTests', 'deletedTestIds', 'priceOverrides', 'flagOverrides', 'updatedBy', 'updatedAt'])
+          ||
+          // Action 3: Packages or Reviews Moderation Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['packagesMap', 'reviewsMap', 'updatedBy', 'updatedAt'])
+          ||
+          // Action 4: Full Admin Catalog Sync
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'priceOverrides', 'flagOverrides', 'customTests',
+            'deletedTestIds', 'packagesMap', 'reviewsMap',
+            'updatedBy', 'updatedAt'
+          ])
+        )
+        && isAdmin();
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 4: /bookings_private/{bookingId} (Strict PII Isolation — Admin Only)
+    // =========================================================================
+    match /bookings_private/{bookingId} {
+      allow get: if isVerifiedUser() && isValidId(bookingId) && isAdmin();
+      allow list: if isBootstrappedAdmin() && resource.data.adminEmail == 'toseefgulistan6@gmail.com';
+      allow create: if isVerifiedUser()
+        && isValidId(bookingId)
+        && isValidBookingPrivate(incoming())
+        && incoming().bookingId == bookingId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidBookingPrivate(incoming())
+        && isValidId(bookingId)
+        && incoming().bookingId == existing().bookingId
+        && incoming().adminEmail == existing().adminEmail
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (isNotTerminalBooking(existing()) || isAdmin())
+        && (
+          // Action 1: Status / Payment Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'paymentStatus', 'discount', 'totalAmount', 'reportPublished', 'updatedBy', 'updatedAt'])
+          ||
+          // Action 2: Full Admin Booking Sync
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'verificationPin', 'patientName', 'patientPhone', 'patientAge',
+            'patientGender', 'collectionType', 'address', 'preferredDate',
+            'preferredTime', 'doctorRef', 'notes', 'itemsMap', 'subtotal',
+            'homeCollectionFee', 'discount', 'totalAmount', 'paymentStatus',
+            'status', 'reportPublished', 'updatedBy', 'updatedAt'
+          ])
+        )
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(bookingId) && isAdmin();
+    }
+
+    // =========================================================================
+    // COLLECTION 5: /booking_reports/{bookingId} (Non-PII Single-Doc QR Verification)
+    // =========================================================================
+    match /booking_reports/{bookingId} {
+      allow get: if isValidId(bookingId);
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(bookingId)
+        && isValidBookingReport(incoming())
+        && incoming().bookingId == bookingId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && existsAfter(/databases/$(database)/documents/bookings_private/$(bookingId));
+      allow update: if isVerifiedUser()
+        && isValidBookingReport(incoming())
+        && isValidId(bookingId)
+        && incoming().bookingId == existing().bookingId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (isNotTerminalBooking(existing()) || isAdmin())
+        && (
+          // Action 1: Publish or Update Diagnostic Report Parameters
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'status', 'paymentStatus', 'discount', 'totalAmount',
+            'reportPublished', 'reportPublishedAt', 'reportResultsMap',
+            'reportRemarks', 'verifiedBy', 'updatedBy', 'updatedAt'
+          ])
+          ||
+          // Action 2: Full Admin Report Sync
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'verificationPin', 'patientName', 'patientAge', 'patientGender',
+            'collectionType', 'preferredDate', 'preferredTime', 'doctorRef',
+            'itemsMap', 'subtotal', 'homeCollectionFee', 'discount',
+            'totalAmount', 'paymentStatus', 'status', 'reportPublished',
+            'reportPublishedAt', 'reportResultsMap', 'reportRemarks',
+            'verifiedBy', 'updatedBy', 'updatedAt'
+          ])
+        )
+        && isAdmin()
+        && existsAfter(/databases/$(database)/documents/bookings_private/$(bookingId));
+      allow delete: if isVerifiedUser() && isValidId(bookingId) && isAdmin();
+    }
+  }
+}

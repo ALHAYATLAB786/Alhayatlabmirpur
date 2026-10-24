@@ -1,0 +1,568 @@
+{
+  "entities": {
+    "AdminRole": {
+      "title": "AdminRole",
+      "description": "Authorized laboratory administrator record granted by the bootstrapped Managing Director.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the administrator.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified Google email address of the administrator.",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full name and designation of the staff administrator.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "addedBy": {
+          "type": "string",
+          "description": "UID of the administrator who created this role record.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the admin role was created."
+        }
+      },
+      "required": ["uid", "email", "displayName", "addedBy", "createdAt"]
+    },
+    "LabSettingsDoc": {
+      "title": "LabSettingsDoc",
+      "description": "Public non-PII profile, timings, address, and home sample fee configuration for Al-Hayat Lab Mirpur.",
+      "type": "object",
+      "properties": {
+        "labName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "labNameUr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "subtitleUr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "tagline": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "taglineUr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "managingDirector": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "managingDirectorUr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "primaryPhone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "secondaryPhone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 30
+        },
+        "address": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 250
+        },
+        "addressUr": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 250
+        },
+        "timings": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "timingsUr": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "specialNoticeEn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "specialNoticeUr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "homeCollectionFee": {
+          "type": "number"
+        },
+        "freeHomeCollectionThreshold": {
+          "type": "number"
+        },
+        "publicWebsiteUrl": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "labName",
+        "labNameUr",
+        "subtitle",
+        "subtitleUr",
+        "tagline",
+        "taglineUr",
+        "managingDirector",
+        "managingDirectorUr",
+        "primaryPhone",
+        "secondaryPhone",
+        "whatsappNumber",
+        "address",
+        "addressUr",
+        "timings",
+        "timingsUr",
+        "specialNoticeEn",
+        "specialNoticeUr",
+        "homeCollectionFee",
+        "freeHomeCollectionThreshold",
+        "publicWebsiteUrl",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CatalogStateDoc": {
+      "title": "CatalogStateDoc",
+      "description": "Real-time cloud catalog overrides, custom tests, diagnostic packages, and approved reviews stored as bounded native maps.",
+      "type": "object",
+      "properties": {
+        "priceOverrides": {
+          "type": "object",
+          "description": "Native map of testId to updated PKR price (bounded <= 1000 keys)."
+        },
+        "flagOverrides": {
+          "type": "object",
+          "description": "Native map of testId to active/popular visibility flags (bounded <= 1000 keys)."
+        },
+        "customTests": {
+          "type": "object",
+          "description": "Native map of newly added custom diagnostic tests (bounded <= 300 keys)."
+        },
+        "deletedTestIds": {
+          "type": "object",
+          "description": "Native map of removed test IDs (bounded <= 500 keys)."
+        },
+        "packagesMap": {
+          "type": "object",
+          "description": "Native map of active/edited health packages (bounded <= 50 keys)."
+        },
+        "reviewsMap": {
+          "type": "object",
+          "description": "Native map of approved public patient testimonials (bounded <= 100 keys)."
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "priceOverrides",
+        "flagOverrides",
+        "customTests",
+        "deletedTestIds",
+        "packagesMap",
+        "reviewsMap",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BookingPrivateDoc": {
+      "title": "BookingPrivateDoc",
+      "description": "PII-isolated private booking record containing patient phone and residential address, restricted strictly to verified Admin.",
+      "type": "object",
+      "properties": {
+        "bookingId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "verificationPin": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "patientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "patientPhone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "patientAge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24
+        },
+        "patientGender": {
+          "type": "string",
+          "enum": ["Male", "Female", "Other"],
+          "maxLength": 16
+        },
+        "collectionType": {
+          "type": "string",
+          "enum": ["lab_visit", "home_collection"],
+          "maxLength": 32
+        },
+        "address": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "preferredDate": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 32
+        },
+        "preferredTime": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "doctorRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "itemsMap": {
+          "type": "object",
+          "description": "Bounded native map of ordered tests/packages (<= 50 items)."
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "homeCollectionFee": {
+          "type": "number"
+        },
+        "discount": {
+          "type": "number"
+        },
+        "totalAmount": {
+          "type": "number"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["Unpaid", "Paid", "Partial"],
+          "maxLength": 20
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pending",
+            "Confirmed",
+            "Sample Collected",
+            "Processing",
+            "Report Ready",
+            "Completed",
+            "Cancelled"
+          ],
+          "maxLength": 32
+        },
+        "reportPublished": {
+          "type": "boolean"
+        },
+        "adminEmail": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "bookingId",
+        "verificationPin",
+        "patientName",
+        "patientPhone",
+        "patientAge",
+        "patientGender",
+        "collectionType",
+        "address",
+        "preferredDate",
+        "preferredTime",
+        "doctorRef",
+        "notes",
+        "itemsMap",
+        "subtotal",
+        "homeCollectionFee",
+        "discount",
+        "totalAmount",
+        "paymentStatus",
+        "status",
+        "reportPublished",
+        "adminEmail",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BookingReportDoc": {
+      "title": "BookingReportDoc",
+      "description": "Non-PII QR verification & clinical report document readable only by exact bookingId (no phone/address PII, no list queries).",
+      "type": "object",
+      "properties": {
+        "bookingId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "verificationPin": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "patientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "patientAge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24
+        },
+        "patientGender": {
+          "type": "string",
+          "enum": ["Male", "Female", "Other"],
+          "maxLength": 16
+        },
+        "collectionType": {
+          "type": "string",
+          "enum": ["lab_visit", "home_collection"],
+          "maxLength": 32
+        },
+        "preferredDate": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 32
+        },
+        "preferredTime": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "doctorRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "itemsMap": {
+          "type": "object",
+          "description": "Bounded native map of ordered tests/packages (<= 50 items)."
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "homeCollectionFee": {
+          "type": "number"
+        },
+        "discount": {
+          "type": "number"
+        },
+        "totalAmount": {
+          "type": "number"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["Unpaid", "Paid", "Partial"],
+          "maxLength": 20
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pending",
+            "Confirmed",
+            "Sample Collected",
+            "Processing",
+            "Report Ready",
+            "Completed",
+            "Cancelled"
+          ],
+          "maxLength": 32
+        },
+        "reportPublished": {
+          "type": "boolean"
+        },
+        "reportPublishedAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "reportResultsMap": {
+          "type": "object",
+          "description": "Bounded native map of clinical report parameters (<= 100 rows)."
+        },
+        "reportRemarks": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "verifiedBy": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "bookingId",
+        "verificationPin",
+        "patientName",
+        "patientAge",
+        "patientGender",
+        "collectionType",
+        "preferredDate",
+        "preferredTime",
+        "doctorRef",
+        "itemsMap",
+        "subtotal",
+        "homeCollectionFee",
+        "discount",
+        "totalAmount",
+        "paymentStatus",
+        "status",
+        "reportPublished",
+        "reportPublishedAt",
+        "reportResultsMap",
+        "reportRemarks",
+        "verifiedBy",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": {
+        "$ref": "#/entities/AdminRole"
+      },
+      "description": "Authorized laboratory administrators appointed by the bootstrapped Managing Director."
+    },
+    "/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/LabSettingsDoc"
+      },
+      "description": "Singleton public configuration ('live') for Al-Hayat Lab Mirpur contact info, hours, and home sample fee."
+    },
+    "/catalog_state/{stateId}": {
+      "schema": {
+        "$ref": "#/entities/CatalogStateDoc"
+      },
+      "description": "Singleton live catalog sync state ('live') containing test price overrides, custom tests, packages, and approved reviews."
+    },
+    "/bookings_private/{bookingId}": {
+      "schema": {
+        "$ref": "#/entities/BookingPrivateDoc"
+      },
+      "description": "Private PII patient booking records restricted strictly to verified laboratory administrators."
+    },
+    "/booking_reports/{bookingId}": {
+      "schema": {
+        "$ref": "#/entities/BookingReportDoc"
+      },
+      "description": "Non-PII verification and diagnostic report records accessible only by single-document get on exact bookingId."
+    }
+  }
+}
